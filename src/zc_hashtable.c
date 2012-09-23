@@ -75,6 +75,10 @@ void zc_hashtable_del(zc_hashtable_t * a_table)
 	zc_hashtable_entry_t *p;
 	zc_hashtable_entry_t *q;
 
+    if (!a_table) {
+        return;
+    }
+
 	for (i = 0; i < a_table->tab_size; i++) {
 		for (p = (a_table->tab)[i]; p; p = q) {
 			q = p->next;
@@ -159,6 +163,10 @@ zc_hashtable_entry_t *zc_hashtable_get_entry(zc_hashtable_t * a_table, const voi
 	unsigned int i;
 	zc_hashtable_entry_t *p;
 
+    if (!a_key) {
+        return NULL;
+    }
+
 	i = a_table->hash(a_key) % a_table->tab_size;
 	for (p = (a_table->tab)[i]; p; p = p->next) {
 		if (a_table->equal(a_key, p->key))
@@ -172,6 +180,10 @@ void *zc_hashtable_get(zc_hashtable_t * a_table, const void *a_key)
 {
 	unsigned int i;
 	zc_hashtable_entry_t *p;
+
+    if (!a_key) {
+        return NULL;
+    }
 
 	i = a_table->hash(a_key) % a_table->tab_size;
 	for (p = (a_table->tab)[i]; p; p = p->next) {
@@ -187,6 +199,10 @@ int zc_hashtable_put(zc_hashtable_t * a_table, void *a_key, void *a_value)
 	int rc = 0;
 	unsigned int i;
 	zc_hashtable_entry_t *p = NULL;
+
+    if (!a_key) {
+        return -1;
+    }
 
 	i = a_table->hash(a_key) % a_table->tab_size;
 	for (p = (a_table->tab)[i]; p; p = p->next) {
@@ -241,6 +257,10 @@ void zc_hashtable_remove(zc_hashtable_t * a_table, const void *a_key)
 {
 	zc_hashtable_entry_t *p;
 	unsigned int i;
+
+    if (!a_key) {
+        return;
+    }
 
 	i = a_table->hash(a_key) % a_table->tab_size;
 	for (p = (a_table->tab)[i]; p; p = p->next) {
