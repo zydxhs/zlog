@@ -40,9 +40,8 @@ install(TARGETS
     RUNTIME DESTINATION bin
     )
 
-file(GLOB HEADERS *.h)
 install(FILES
-    ${HEADERS}
+    zlog.h
     COMPONENT zlog
-    DESTINATION include/zlog
+    DESTINATION include
     )
