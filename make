@@ -302,7 +302,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
 
     parser.add_argument('-c', '--clean', action='store_true', help = 'clean project.')
-    parser.add_argument('-p', '--package', action='store_true', help = 'clean project.')
+    parser.add_argument('--nopackage', action='store_true', help = 'clean project.')
     parser.add_argument('-b', '--build', choices=['Debug', 'Release'], default='Release', help = 'build release or debug version.')
     parser.add_argument('-t', '--toolset', choices=['gcc', 'msvc'], default = 'gcc', help = 'specify the build tool set.')
     parser.add_argument('-a', '--arch', choices=['i686', 'x86_64'], default=platform.processor(), help = '32bit or 64bit version.')
@@ -332,7 +332,7 @@ if __name__ == '__main__':
     
     make()
 
-    if args.package:
+    if not args.nopackage:
         make_package()
 
     if args.gendoc:
