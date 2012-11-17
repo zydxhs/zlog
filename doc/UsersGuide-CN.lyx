@@ -1123,7 +1123,7 @@ rotate lock file = /tmp/zlog.lock
 \end_layout
 
 \begin_layout LyX-Code
-default format = "%D.%us %-6P (%c:%F:%L) - %m%n"
+default format = "%d.%us %-6P (%c:%F:%L) - %m%n"
 \end_layout
 
 \begin_layout LyX-Code
@@ -1159,7 +1159,7 @@ simple = "%m%n"
 \end_layout
 
 \begin_layout LyX-Code
-normal = "%D %m%n"
+normal = "%d %m%n"
 \end_layout
 
 \begin_layout LyX-Code
@@ -1343,7 +1343,7 @@ default format
 \end_layout
 
 \begin_layout LyX-Code
-"%D %V [%p:%F:%L] %m%n"
+"%d %V [%p:%F:%L] %m%n"
 \end_layout
 
 \begin_layout Standard
@@ -1567,7 +1567,7 @@ zlog_info(c, "hello, zlog");
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="22" columns="3">
+<lyxtabular version="3" rows="21" columns="3">
 <features islongtable="true" longtabularalignment="center">
 <column alignment="center" valignment="top" width="10text%">
 <column alignment="left" valignment="top" width="50text%">
@@ -1676,33 +1676,8 @@ reference "sub:时间字符"
 %d 2012-02-14 17:03:12
 \end_layout
 
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
 \begin_layout Plain Layout
-%D
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-相当于%d(%F %T)，zlog默认时间串，在性能上比%d有一定的提升
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2012-02-14 17:03:12
+%d()
 \end_layout
 
 \end_inset
@@ -1713,7 +1688,7 @@ reference "sub:时间字符"
 \begin_inset Text
 
 \begin_layout Plain Layout
-%E()
+%%E()
 \end_layout
 
 \end_inset
@@ -4639,7 +4614,7 @@ cronolog读到的文件流是连续的，它不知道单条日志的边界在哪
 \end_layout
 
 \begin_layout Standard
-所以，总结一下，使用管道来输出日志而保证日志不交错，需要满足这样的条件。
+所以，总结一下，使用管道来输出到单个日志文件的情况是：
 \end_layout
 
 \begin_layout Itemize
@@ -4650,8 +4625,12 @@ cronolog读到的文件流是连续的，它不知道单条日志的边界在哪
 有父子关系的多进程，单条日志长度不能超过PIPE_BUF（4096）
 \end_layout
 
+\begin_layout Itemize
+无父子关系的多进程使用管道同时写一个日志，无论单条日志长度是多少，都有可能导致日志交错。
+\end_layout
+
 \begin_layout Standard
-无父子关系的多进程同时写一个日志，无论单条日志长度是多少，都有可能导致日志交错。
+zlog本身的直接文件输出能保证即使是多进程，同时调用zlog写一个日志文件也不会产生交错，见下。
 \end_layout
 
 \end_deeper
@@ -6265,7 +6244,7 @@ zlog允许用户自定义输出函数。输出函数需要绑定到某条特殊�
 \end_layout
 
 \begin_layout LyX-Code
-*.*     $name, "record path %c %D"; simple
+*.*     $name, "record path %c %d"; simple
 \end_layout
 
 \begin_layout Standard
@@ -7378,7 +7357,7 @@ simple = "%m%n"
 \end_layout
 
 \begin_layout LyX-Code
-my_cat.*      $myoutput, " mypath %c %D";simple
+my_cat.*      $myoutput, " mypath %c %d";simple
 \end_layout
 
 \end_deeper

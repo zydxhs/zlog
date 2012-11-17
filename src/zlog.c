@@ -47,7 +47,13 @@ static int zlog_env_init_version = -1;
 /* inner no need thread-safe */
 static void zlog_fini_inner(void)
 {
-	// pthread_key_delete(zlog_thread_key);
+	/* pthread_key_delete(zlog_thread_key); */
+	/* never use pthread_key_delete,
+	 * it will cause other thread can't release zlog_thread_t 
+	 * after one thread call pthread_key_delete
+	 * also key not init will cause a core dump
+	 */
+	
 	if (zlog_env_categories) zlog_category_table_del(zlog_env_categories);
 	zlog_env_categories = NULL;
 	zlog_default_category = NULL;
@@ -55,6 +61,15 @@ static void zlog_fini_inner(void)
 	zlog_env_records = NULL;
 	if (zlog_env_conf) zlog_conf_del(zlog_env_conf);
 	zlog_env_conf = NULL;
+	return;
+}
+
+static void zlog_clean_rest_thread(void)
+{
+	zlog_thread_t *a_thread;
+	a_thread = pthread_getspecific(zlog_thread_key);
+	if (!a_thread) return;
+	zlog_thread_del(a_thread);
 	return;
 }
 
@@ -74,11 +89,20 @@ static int zlog_init_inner(const char *confpath)
 		goto err;
 	}
 
-	/* clean up is done by OS */
+	/* clean up is done by OS  when a thread call pthread_exit */
 	rc = pthread_key_create(&zlog_thread_key,
 		(void (*) (void *)) zlog_thread_del);
 	if (rc) {
 		zc_error("pthread_key_create fail, rc[%d]", rc);
+		goto err;
+	}
+
+	/* if some thread do not call pthread_exit, like main thread
+	 * atexit will clean it 
+	 */
+	rc = atexit(zlog_clean_rest_thread);
+	if (rc) {
+		zc_error("atexit fail, rc[%d]", rc);
 		goto err;
 	}
 
@@ -393,12 +417,13 @@ err:
 	return -1;
 }
 /*******************************************************************************/
-#define zlog_fetch_thread(fail_goto) do {  \
+#define zlog_fetch_thread(a_thread, fail_goto) do {  \
 	int rd = 0;  \
 	a_thread = pthread_getspecific(zlog_thread_key);  \
 	if (!a_thread) {  \
 		a_thread = zlog_thread_new(zlog_env_init_version,  \
-				zlog_env_conf->buf_size_min, zlog_env_conf->buf_size_max);  \
+				zlog_env_conf->buf_size_min, zlog_env_conf->buf_size_max, \
+				zlog_env_conf->time_cache_count); \
 		if (!a_thread) {  \
 			zc_error("zlog_thread_new fail");  \
 			goto fail_goto;  \
@@ -413,8 +438,16 @@ err:
 	}  \
   \
 	if (a_thread->init_version != zlog_env_init_version) {  \
-		rd = zlog_thread_resize_msg_buf(a_thread, zlog_env_init_version,  \
-				zlog_env_conf->buf_size_min, zlog_env_conf->buf_size_max);  \
+		/* as mdc is still here, so can not easily del and new */ \
+		rd = zlog_thread_rebuild_msg_buf(a_thread, \
+				zlog_env_conf->buf_size_min, \
+				zlog_env_conf->buf_size_max);  \
+		if (rd) {  \
+			zc_error("zlog_thread_resize_msg_buf fail, rd[%d]", rd);  \
+			goto fail_goto;  \
+		}  \
+  \
+		rd = zlog_thread_rebuild_event(a_thread, zlog_env_conf->time_cache_count);  \
 		if (rd) {  \
 			zc_error("zlog_thread_resize_msg_buf fail, rd[%d]", rd);  \
 			goto fail_goto;  \
@@ -442,7 +475,7 @@ int zlog_put_mdc(const char *key, const char *value)
 		goto err;
 	}
 
-	zlog_fetch_thread(err);
+	zlog_fetch_thread(a_thread, err);
 
 	if (zlog_mdc_put(a_thread->mdc, key, value)) {
 		zc_error("zlog_mdc_put fail, key[%s], value[%s]", key, value);
@@ -606,7 +639,7 @@ void vzlog(zlog_category_t * category,
 		goto exit;
 	}
 
-	zlog_fetch_thread(exit);
+	zlog_fetch_thread(a_thread, exit);
 
 	zlog_event_set_fmt(a_thread->event,
 		category->name, category->name_len,
@@ -653,7 +686,7 @@ void hzlog(zlog_category_t *category,
 		goto exit;
 	}
 
-	zlog_fetch_thread(exit);
+	zlog_fetch_thread(a_thread, exit);
 
 	zlog_event_set_hex(a_thread->event,
 		category->name, category->name_len,
@@ -708,7 +741,7 @@ void vdzlog(const char *file, size_t filelen,
 		goto exit;
 	}
 
-	zlog_fetch_thread(exit);
+	zlog_fetch_thread(a_thread, exit);
 
 	zlog_event_set_fmt(a_thread->event,
 		zlog_default_category->name, zlog_default_category->name_len,
@@ -761,7 +794,7 @@ void hdzlog(const char *file, size_t filelen,
 		goto exit;
 	}
 
-	zlog_fetch_thread(exit);
+	zlog_fetch_thread(a_thread, exit);
 
 	zlog_event_set_hex(a_thread->event,
 		zlog_default_category->name, zlog_default_category->name_len,
@@ -809,7 +842,7 @@ void zlog(zlog_category_t * category,
 		goto exit;
 	}
 
-	zlog_fetch_thread(exit);
+	zlog_fetch_thread(a_thread, exit);
 
 	va_start(args, format);
 	zlog_event_set_fmt(a_thread->event,
@@ -864,7 +897,7 @@ void dzlog(const char *file, size_t filelen, const char *func, size_t funclen, l
 		goto exit;
 	}
 
-	zlog_fetch_thread(exit);
+	zlog_fetch_thread(a_thread, exit);
 
 	va_start(args, format);
 	zlog_event_set_fmt(a_thread->event,
