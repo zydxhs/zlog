@@ -540,20 +540,19 @@ $ sudo ldconfig
 \end_layout
 
 \begin_layout LyX-Code
-$ make 32bit /* 32bit version on 64bit machine, libc6-dev-i386 is needed
- */
+$ make 32bit # 32bit version on 64bit machine, libc6-dev-i386 is needed
 \end_layout
 
 \begin_layout LyX-Code
-$ make noopt /* without gcc optimization */
+$ make noopt # without gcc optimization
 \end_layout
 
 \begin_layout LyX-Code
-$ make doc /* lyx is needed */
+$ make doc   # lyx and hevea is needed
 \end_layout
 
 \begin_layout LyX-Code
-$ make test /* test code, which is also good example for zlog */
+$ make test  # test code, which is also good example for zlog
 \end_layout
 
 \begin_layout Itemize
@@ -1123,7 +1122,7 @@ rotate lock file = /tmp/zlog.lock
 \end_layout
 
 \begin_layout LyX-Code
-default format = "%d.%us %-6P (%c:%F:%L) - %m%n"
+default format = "%d.%us %-6V (%c:%F:%L) - %m%n"
 \end_layout
 
 \begin_layout LyX-Code
@@ -1533,7 +1532,7 @@ name "sec:转换格式串"
 \end_layout
 
 \begin_layout LyX-Code
-"%d(%m-%d %T) %-5P [%p:%F:%L] %m%n".
+"%d(%m-%d %T) %-5V [%p:%F:%L] %m%n".
 \end_layout
 
 \begin_layout Standard
