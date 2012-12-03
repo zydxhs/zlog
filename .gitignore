@@ -49,3 +49,4 @@ doc/*.tex
 test/press*
 test/*.png
 cscope*
+release.h
