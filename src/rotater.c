@@ -143,7 +143,6 @@ static zlog_file_t *zlog_file_check_new(zlog_rotater_t * a_rotater, const char *
 {
 	int nwrite;
 	int nread;
-	int nscan;
 	zlog_file_t *a_file;
 
 	/* base_path will not be in list */
@@ -168,8 +167,8 @@ static zlog_file_t *zlog_file_check_new(zlog_rotater_t * a_rotater, const char *
 		goto err;
 	}
 
-	nscan = sscanf(a_file->path + a_rotater->num_start_len, "%d%n", &(a_file->index), &(nread));
-	if (nscan == 0) nread = 0; /* if nothing is scaned, nread will be a random number */
+	nread = 0;
+	sscanf(a_file->path + a_rotater->num_start_len, "%d%n", &(a_file->index), &(nread));
 
 	if (a_rotater->num_width != 0) {
 		if (nread < a_rotater->num_width) {
@@ -387,6 +386,7 @@ static int zlog_rotater_parse_archive_path(zlog_rotater_t * a_rotater)
 			return -1;
 		}
 
+		nread = 0;
 		sscanf(p, "#%d%n", &(a_rotater->num_width), &nread);
 		if (nread == 0) nread = 1;
 		if (*(p+nread) == 'r') {
@@ -539,8 +539,7 @@ static int zlog_rotater_unlock(zlog_rotater_t *a_rotater)
 
 int zlog_rotater_rotate(zlog_rotater_t *a_rotater,
 		char *base_path, size_t msg_len,
-		char *archive_path, long archive_max_size, int archive_max_count,
-		int *reopen_fd, int reopen_flags, unsigned int reopen_perms)
+		char *archive_path, long archive_max_size, int archive_max_count)
 {
 	int rc = 0;
 	struct zlog_stat info;
@@ -551,9 +550,6 @@ int zlog_rotater_rotate(zlog_rotater_t *a_rotater,
 		zc_warn("zlog_rotater_trylock fail, maybe lock by other process or threads");
 		return 0;
 	}
-
-	/* just one thread in one process in the global system run code here, 
-	 * so it is safe to reopen the fd of file */
 
 	if (stat(base_path, &info)) {
 		rc = -1;
@@ -577,19 +573,6 @@ int zlog_rotater_rotate(zlog_rotater_t *a_rotater,
 	} /* else if (rc == 0) */
 
 	//zc_debug("zlog_rotater_file_ls_mv success");
-
-	if (reopen_fd == NULL) goto exit;
-
-	if (close(*reopen_fd)) {
-		rc = -1;
-		zc_error("close fail, errno[%d]", errno);
-	} /* still try open again */
-
-	if ((*reopen_fd = open(base_path, reopen_flags, reopen_perms)) < 0) {
-		rc = -1;
-		zc_error("open fail, errno[%d]", errno);
-		goto exit;
-	}
 
 exit:
 	/* unlock file */
