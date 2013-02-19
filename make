@@ -47,6 +47,12 @@ class CMakeOptions(object):
             self._opts.append('-G')
             self._opts.append("Unix Makefiles")
 
+    def set_verbose(self, verbose):
+        """
+        """
+        if verbose:
+            self._opts.append('-DCMAKE_VERBOSE_MAKEFILE=ON')
+
     def set_build_type(self, build_type):
         """
         """
@@ -310,6 +316,7 @@ if __name__ == '__main__':
     parser.add_argument('--gendoc', action='store_true', help = 'generate develop doc.')
     parser.add_argument('--test', action='store_false', help = 'run unittest after build.')
     parser.add_argument('--codecoverage', action='store_true', help = 'run unittest and code coverage after build.')
+    parser.add_argument('--verbose', action='store_true', help = 'show gcc args.')
 
     args = parser.parse_args()
 
@@ -329,6 +336,7 @@ if __name__ == '__main__':
     cmake_options.set_env(args.env)
     cmake_options.set_test(args.codecoverage or args.test)
     cmake_options.set_generater(args.toolset, args.env)
+    cmake_options.set_verbose(args.verbose)
     
     make()
 
