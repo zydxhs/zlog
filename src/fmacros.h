@@ -13,7 +13,9 @@
 # define _XOPEN_SOURCE_EXTENDED
 #endif
 #else
+#ifndef _XOPEN_SOURCE
 # define _XOPEN_SOURCE
+#endif
 #endif
 
 #ifndef _LARGEFILE_SOURCE
