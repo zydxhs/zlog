@@ -50,3 +50,5 @@ test/press*
 test/*.png
 cscope*
 release.h
+*.pyc
+
