@@ -5,9 +5,7 @@ if (NOT UNIXEM_FOUND)
     if (NOT UNIXEM_INCLUDE_DIR)
         find_path(UNIXEM_INCLUDE_DIR
             NAMES
-                unixem.h
-            PATH_SUFFIXES
-                unixem
+                unixem/unixem.h
             ONLY_CMAKE_FIND_ROOT_PATH
         )
     endif()

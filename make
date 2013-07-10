@@ -94,58 +94,6 @@ def set_log(level):
             }
     logging.basicConfig(level = log_level[level])
 
-def cvt_encoding(TO_NO_BOM = None):
-    """
-    vc必须只能识别带bom的utf-8编码，而gcc不能识别带bom的utf-8编码
-    默认情况下，linux下使用无bom的utf-8编码，windows采用带bom的utf-8编码。
-    ？？git是否可以自动转换？？这个需要确定。
-    True : 将带BOM的utf-8格式文件转换为不带BOM的utf-8格式
-    False: 将不带BOM的utf-8格式文件转换为带BOM的utf-8格式
-    """
-    file_types = set(['.cpp', '.hpp', '.ipp', '.c', '.h'])
-
-    logging.warning('开始执行编码转换[cvt_encoding][TO_NO_BOM = %s]' % str(TO_NO_BOM))
-    cvt_count = 0
-
-    for r, ds, fs in os.walk('.'):
-        # 忽略第三方头文件
-        if 'thrid_part' in r:
-            continue
-
-        for fn in fs:
-            # 只处理指定类型文件，如果不是指定类型，跳过
-            ft = os.path.splitext(fn)[1]
-            if ft not in file_types:
-                continue
-
-            # 读取文件内容
-            buf = ''
-            fn = r + os.sep + fn
-            f = codecs.open(fn, 'r', encoding = 'utf-8')
-            buf = f.read()
-            f.close()
-
-            # buf为空，不需要转换
-            if len(buf) == 0:
-                continue
-
-            if buf[0] == '\ufeff' and TO_NO_BOM is True:
-                buf = buf.lstrip('\ufeff')
-            elif buf[0] != '\ufeff' and TO_NO_BOM is False:
-                buf = '\ufeff' + buf
-            else:
-                # 已经是指定的格式，不需要转换
-                continue
-
-            logging.info('正在转换文件[%s]...' % fn)
-            f = codecs.open(fn, 'w', encoding = 'utf-8')
-            f.write(buf)
-
-            logging.info('转换文件[%s]完成。' % fn)
-            cvt_count += 1
-
-    logging.info('成功转换%d个文件的编码。' % cvt_count)
-
 def make_clean():
     """
     清除上次编译的结果
@@ -326,11 +274,6 @@ if __name__ == '__main__':
     if args.clean:
         make_clean()
         exit(0)
-
-    if platform.system() == 'Windows' and args.toolset == 'msvc':
-        cvt_encoding(TO_NO_BOM = False)
-    else:
-        cvt_encoding(TO_NO_BOM = True)
 
     cmake_options.set_build_type(args.build)
     cmake_options.set_env(args.env)
