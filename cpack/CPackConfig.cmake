@@ -29,6 +29,8 @@ SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CP
 #SET(CPACK_PACKAGE_EXECUTABLES "ccmake;CMake")
 #SET(CPACK_STRIP_FILES "bin/ccmake;bin/cmake;bin/cpack;bin/ctest")
 
+set (CPACK_NSIS_MODIFY_PATH, ON)
+
 #=================================
 # set platform.
 #=================================

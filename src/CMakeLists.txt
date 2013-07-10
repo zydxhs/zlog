@@ -12,6 +12,14 @@ add_library(zlog
 target_link_libraries(zlog
     ${CMAKE_THREAD_PREFER_PTHREAD}
     )
+
+if (WIN32)
+    target_link_libraries(zlog
+        ${UNIXEM_LIBRARY}
+        Ws2_32
+        )
+endif()
+
 set_target_properties(zlog PROPERTIES VERSION ${zlog_ver} SOVERSION ${zlog_so_ver})
 
 add_library(zlog_s
@@ -21,6 +29,14 @@ add_library(zlog_s
 target_link_libraries(zlog_s 
     ${CMAKE_THREAD_PREFER_PTHREAD}
     )
+
+if (WIN32)
+    target_link_libraries(zlog_s
+        ${UNIXEM_LIBRARY}
+        Ws2_32
+        )
+endif()
+
 set_target_properties(zlog_s PROPERTIES OUTPUT_NAME zlog)
 
 #================================================================

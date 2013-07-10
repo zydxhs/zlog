@@ -3,7 +3,9 @@
 
 cmake_minimum_required(VERSION 2.8.5)
 
+message(STATUS "path : ${CMAKE_FIND_ROOT_PATH}")
 project(zlog)
+message(STATUS "path : ${CMAKE_FIND_ROOT_PATH}")
 
 set(CMAKE_MODULE_PATH ${zlog_SOURCE_DIR}/cmake)
 
@@ -20,17 +22,15 @@ SET(zlog_so_ver ${CPACK_PACKAGE_VERSION_MAJOR})
 
 #=======================================================
 
+message(STATUS "plateform : ${CMAKE_SYSTEM}")
+
+add_definitions("-g -Wall -Wstrict-prototypes") 
+set(CMAKE_C_FLAGS "-std=c99 -pedantic")
+set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -DDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O2")
+
 if (WIN32)
-    # windows
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWINVER=0x0500 -D_WIN32_WINNT=0x0500 ") #-DBOOST_ALL_DYN_LINK
-else(WIN32)
-    # posix
-    #add_definitions("-M -MD -MP ") #if there is many error, add this option and try again.
-    add_definitions("-D_XOPEN_SOURCE=600 -D_BSD_SOURCE") #for solaris 
-    add_definitions("-g -Wall -Wstrict-prototypes") 
-    set(CMAKE_C_FLAGS "-std=c99 -pedantic")
-    set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -DDEBUG")
-    set(CMAKE_C_FLAGS_RELEASE "-O2")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWINVER=0x0500 -D_WIN32_WINNT=0x0500 ")
 endif()
 
 #=====================================================
@@ -54,6 +54,9 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #=====================================================
 # library depend.
 set(Need_THREAD 1)
+if (WIN32)
+    set(Need_UNIXEM 1)
+endif()
 
 include(cmake/LoadLibraries.cmake)
 #=====================================================

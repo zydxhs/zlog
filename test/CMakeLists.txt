@@ -1,17 +1,29 @@
 
 include_directories("${CMAKE_HOME_DIRECTORY}/src")
 
-file(GLOB SRCS . *.c) 
+aux_source_directory(. SRCS) 
+
+if (WIN32)
+    #message(STATUS ${SRCS})
+    list(REMOVE_ITEM SRCS ./test_press_syslog.c)
+    list(REMOVE_ITEM SRCS ./test_syslog.c)
+    list(REMOVE_ITEM SRCS ./test_press_write.c)
+    list(REMOVE_ITEM SRCS ./test_press_write2.c)
+    list(REMOVE_ITEM SRCS ./test_press_zlog.c)
+    list(REMOVE_ITEM SRCS ./test_press_zlog2.c)
+    #message(STATUS ${SRCS})
+endif()
+
 set(not_auto_add_test 
     test_hello
     test_bitmap
     test_hex
     test_leak
-    test_press_syslog
     test_press_write
     test_press_write2
     test_press_zlog
     test_press_zlog2
+    test_press_syslog
     test_syslog
     )
 

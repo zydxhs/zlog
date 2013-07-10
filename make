@@ -218,7 +218,7 @@ def get_test_cmd():
     if os.name == 'posix':
         return ['make', 'test']
     else:
-        return ''
+        return ['mingw32-make', 'test']
 
 def make_test():
     """
