@@ -21,7 +21,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-#ifdef _WIN32
+#ifndef _WIN32
 #include <syslog.h>
 #endif
 
@@ -50,7 +50,7 @@ void zlog_level_del(zlog_level_t *a_level)
 	return;
 }
 
-#ifdef _WIN32
+#ifndef _WIN32
 static int syslog_level_atoi(char *str)
 {
 	/* guess no unix system will choose -187
@@ -120,7 +120,7 @@ zlog_level_t *zlog_level_new(char *line)
 
 	a_level->int_level = l;
 
-#ifdef _WIN32
+#ifndef _WIN32
 	/* fill syslog level */
 	if (sl[0] == '\0') {
 		a_level->syslog_level = LOG_DEBUG;

@@ -1,2 +1,3 @@
-python make -c
-python make -e mingw64 --nopackage
+
+python make -e mingw64 -c
+python make -e mingw64 --nopackage -b Release

@@ -42,6 +42,7 @@ endif()
 # lib output path.
 cmake_policy(SET CMP0015 NEW)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${zlog_BINARY_DIR}/lib")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${zlog_BINARY_DIR}/lib")
 # bin output path.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${zlog_BINARY_DIR}/bin")
 #=====================================================

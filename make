@@ -17,7 +17,7 @@ from subprocess import Popen, PIPE
 # 项目所在文件夹
 project_dir = os.getcwd()
 # 编译文件夹
-build_dir = project_dir + '/build/%s' % platform.system()
+build_dir = os.path.join(project_dir, 'build', platform.system())
 
 #====================================================
 # cmake 参数
@@ -103,8 +103,6 @@ def make_clean():
     
     # 直接删除目录及其文件
     shutil.rmtree(build_dir)
-
-    # 删除预编译头文件 todo
 
 def get_make_cmd():
     """

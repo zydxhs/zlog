@@ -29,6 +29,9 @@ SET(CMAKE_SYSTEM_INCLUDE_PATH "${CMAKE_SYSTEM_INCLUDE_PATH} ${MINGW_PATH}/includ
 SET(CMAKE_SYSTEM_LIBRARY_PATH "${CMAKE_SYSTEM_LIBRARY_PATH} ${MINGW_PATH}/lib ${MINGW_PATH}/x86_64-w64-mingw32/lib")
 SET(CMAKE_SYSTEM_PROGRAM_PATH "${CMAKE_SYSTEM_PROGRAM_PATH} ${MINGW_PATH}/bin ${MINGW_PATH}/x86_64-w64-mingw32/bin")
 
+# printf support %sz format.
+add_definitions("-D_POSIX")
+
 # search for programs in the build host directories
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 # for libraries and headers in the target directories

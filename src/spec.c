@@ -34,8 +34,12 @@
 #include "level_list.h"
 #include "zc_defs.h"
 
-
+#ifdef _WIN32
+#define ZLOG_DEFAULT_TIME_FMT "%Y-%m-%d %H:%M:%S"
+#else
 #define ZLOG_DEFAULT_TIME_FMT "%F %T"
+#endif
+
 #define	ZLOG_HEX_HEAD  \
 	"\n             0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F    0123456789ABCDEF"
 
@@ -214,7 +218,7 @@ static int zlog_spec_write_pid(zlog_spec_t * a_spec, zlog_thread_t * a_thread, z
 		if (a_thread->event->pid != a_thread->event->last_pid) {
 			a_thread->event->last_pid = a_thread->event->pid;
 			a_thread->event->pid_str_len
-				= sprintf(a_thread->event->pid_str, "%zu", a_thread->event->pid);
+				= sprintf(a_thread->event->pid_str, "%lu", a_thread->event->pid);
 		}
 	}
 
