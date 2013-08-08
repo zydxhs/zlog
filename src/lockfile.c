@@ -1,12 +1,12 @@
 ﻿/**
  * =============================================================================
- * 
+ *
  * \file lockfile.c
- * \breif 
+ * \breif
  * \version 1.0
  * \date 2013-07-07 11:55:38
  * \author  Song min.Li (Li), lisongmin@126.com
- * \copyright Copyright (c) 2013, skybility 
+ * \copyright Copyright (c) 2013, skybility
  *
  * =============================================================================
  */
@@ -28,7 +28,7 @@ LOCK_FD lock_file(char* path)
 		zc_error("lock file error : %d ", err);
     }
 #else
-    LOCK_FD fd = open(path, O_RDWR | O_CREATE | O_EXCL);
+    LOCK_FD fd = open(path, O_RDWR | O_CREAT | O_EXCL, S_IRWXU | S_IRWXG | S_IRWXO);
     if (fd == INVALID_LOCK_FD)
     {
 		zc_error("lock file error : %s ", strerror(errno));
