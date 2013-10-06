@@ -1,6 +1,6 @@
 # zlog makefile
 # Copyright (C) 2010-2012 Hardy Simpson <HardySimpson1984@gmail.com>
-# This file is released under the LGPL license, see the COPYING file
+# This file is released under the LGPL 2.1 license, see the COPYING file
 
 OBJ=    \
   buf.o    \
@@ -34,8 +34,8 @@ CC:=$(shell sh -c 'type $(CC) >/dev/null 2>/dev/null && echo $(CC) || echo gcc')
 OPTIMIZATION?=-O2
 WARNINGS=-Wall -Werror -Wstrict-prototypes -fwrapv
 DEBUG?= -g -ggdb
-REAL_CFLAGS=$(OPTIMIZATION) -fPIC $(CFLAGS) $(WARNINGS) $(DEBUG)
-REAL_LDFLAGS=$(LDFLAGS) -lpthread
+REAL_CFLAGS=$(OPTIMIZATION) -fPIC -pthread $(CFLAGS) $(WARNINGS) $(DEBUG)
+REAL_LDFLAGS=$(LDFLAGS) -pthread
 
 DYLIBSUFFIX=so
 STLIBSUFFIX=a
@@ -61,9 +61,11 @@ ifeq ($(uname_S),Darwin)
 endif
 
 ifeq ($(uname_S),AIX)
-  DYLIB_MAKE_CMD=$(CC) -shared -Wl,-G,-b64 -maix64 -o  $(DYLIBNAME) $(LDFLAGS)
-  REAL_CFLAGS=$(OPTIMIZATION) -fPIC $(CFLAGS) $(WARNINGS) $(DEBUG) -maix64
-  STLIB_MAKE_CMD=OBJECT_MODE=64 ar rcs $(STLIBNAME)
+  # this logic of minor major is not relevant on AIX or at least not widely used
+  # not to mention dynamic linker .a preference...
+  DYLIB_MAKE_CMD=$(CC) -shared -Wl,-G,-b64 -maix64 -pthread -o $(DYLIBNAME) $(LDFLAGS)
+  REAL_CFLAGS+= -maix64
+  STLIB_MAKE_CMD=OBJECT_MODE=64 ar rcs $(STLIBNAME) $(DYLIB_MAJOR_NAME)
 endif
 
 all: $(DYLIBNAME) $(BINS)
@@ -118,8 +120,11 @@ zlog.o: zlog.c fmacros.h conf.h zc_defs.h zc_profile.h zc_arraylist.h \
  record.h rule.h
 
 $(DYLIBNAME): $(OBJ)
-	$(DYLIB_MAKE_CMD) $(OBJ)
-	cp -f $(DYLIBNAME) $(DYLIB_MINOR_NAME) # for test directory
+	$(DYLIB_MAKE_CMD) $(OBJ) $(REAL_LDFLAGS)
+	# for use in test folder - linux and requirement for aix runtime
+	# resolving
+	cp -f $(DYLIBNAME) $(DYLIB_MAJOR_NAME)
+	cp -f $(DYLIBNAME) $(DYLIB_MINOR_NAME)
 
 $(STLIBNAME): $(OBJ)
 	$(STLIB_MAKE_CMD) $(OBJ)
@@ -129,7 +134,7 @@ static: $(STLIBNAME)
 
 # Binaries:
 zlog-chk-conf: zlog-chk-conf.o $(STLIBNAME) $(DYLIBNAME)
-	$(CC) -o $@ $(REAL_CFLAGS) zlog-chk-conf.o -L. -lzlog $(REAL_LDFLAGS)
+	$(CC) -o $@ zlog-chk-conf.o -L. -lzlog $(REAL_LDFLAGS)
 
 .c.o:
 	$(CC) -std=c99 -pedantic -c $(REAL_CFLAGS) $<

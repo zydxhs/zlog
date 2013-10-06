@@ -8,7 +8,7 @@ zlog是一个高可靠性、高性能、线程安全、灵活、概念清晰的�
 
 1.安装
 
-下载 https://github.com/HardySimpson/zlog/archive/latest-stable.tar.gz
+下载：https://github.com/HardySimpson/zlog/releases
 
 $ tar -zxvf zlog-latest-stable.tar.gz
 $ cd zlog-latest-stable/
@@ -101,14 +101,8 @@ hello, zlog
  *  不依赖其他库，只要是个POSIX系统就成(当然还要一个C99兼容的vsnprintf)
 
 6.相关链接
-软件下载：https://github.com/HardySimpson/zlog/archive/latest-stable.tar.gz
 主页：http://hardysimpson.github.com/zlog/
-
-使用手册：http://hardysimpson.github.com/zlog/UsersGuide-CN.html
-源代码：git@github.com:HardySimpson/zlog.git
-
-问题讨论区：https://github.com/HardySimpson/zlog/issues
-作者博客：http://my.oschina.net/HardySimpson/blog
+软件下载：https://github.com/HardySimpson/zlog/releases
 作者邮箱：HardySimpson1984@gmail.com
 
 auto tools版本: https://github.com/bmanojlovic/zlog

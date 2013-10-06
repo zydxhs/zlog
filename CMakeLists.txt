@@ -1,5 +1,5 @@
 # create by lsm <lsm@skybility.com>
-# cmake 
+# cmake
 
 cmake_minimum_required(VERSION 2.8.5)
 
@@ -14,7 +14,7 @@ set(CMAKE_MODULE_PATH ${zlog_SOURCE_DIR}/cmake)
 #=====================================
 SET(CPACK_PACKAGE_VERSION_MAJOR "1")
 SET(CPACK_PACKAGE_VERSION_MINOR "2")
-SET(CPACK_PACKAGE_VERSION_PATCH "9")
+SET(CPACK_PACKAGE_VERSION_PATCH "12")
 SET(CPACK_RPM_PACKAGE_RELEASE 1)    #release version.
 SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 SET(zlog_ver ${CPACK_PACKAGE_VERSION})
@@ -24,7 +24,7 @@ SET(zlog_so_ver ${CPACK_PACKAGE_VERSION_MAJOR})
 
 message(STATUS "plateform : ${CMAKE_SYSTEM}")
 
-add_definitions("-g -Wall -Wstrict-prototypes") 
+add_definitions("-g -Wall -Wstrict-prototypes")
 set(CMAKE_C_FLAGS "-std=c99 -pedantic")
 set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -DDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "-O2")
@@ -69,7 +69,7 @@ add_subdirectory(cpack)
 #========================================================
 
 #========================================================
-# for unittest, call "cmake .. -DUNIT_TEST=on" 
+# for unittest, call "cmake .. -DUNIT_TEST=on"
 if(UNIT_TEST)
     enable_testing()
     add_subdirectory(test)
