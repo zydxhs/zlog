@@ -94,7 +94,7 @@ static int zlog_spec_write_time_D(zlog_spec_t * a_spec, zlog_thread_t * a_thread
 		gettimeofday(&(a_thread->event->time_stamp), NULL);
 	}
 
-	/* 
+	/*
 	 * It is modified when time slips one second.
 	 * So it is a strong cache, as Default time format is always %F %T.
 	 * That's why I said %D is faster than %d()
@@ -218,7 +218,7 @@ static int zlog_spec_write_pid(zlog_spec_t * a_spec, zlog_thread_t * a_thread, z
 		if (a_thread->event->pid != a_thread->event->last_pid) {
 			a_thread->event->last_pid = a_thread->event->pid;
 			a_thread->event->pid_str_len
-				= sprintf(a_thread->event->pid_str, "%lu", a_thread->event->pid);
+				= sprintf(a_thread->event->pid_str, "%u", a_thread->event->pid);
 		}
 	}
 
@@ -443,7 +443,7 @@ static int zlog_spec_parse_print_fmt(zlog_spec_t * a_spec)
 	p = a_spec->print_fmt;
 	if (*p == '-') {
 		a_spec->left_adjust = 1;
-		p++; 
+		p++;
 	} else {
 		a_spec->left_adjust = 0;
 	}
