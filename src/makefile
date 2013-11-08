@@ -22,6 +22,7 @@ OBJ=    \
   zc_hashtable.o    \
   zc_profile.o    \
   zc_util.o    \
+  lockfile.o \
   zlog.o
 BINS=zlog-chk-conf
 LIBNAME=libzlog
@@ -114,6 +115,7 @@ zc_profile.o: zc_profile.c fmacros.h zc_profile.h zc_xplatform.h
 zc_util.o: zc_util.c zc_defs.h zc_profile.h zc_arraylist.h zc_hashtable.h \
  zc_xplatform.h zc_util.h
 zlog-chk-conf.o: zlog-chk-conf.c fmacros.h zlog.h
+lockfile.o: lockfile.c
 zlog.o: zlog.c fmacros.h conf.h zc_defs.h zc_profile.h zc_arraylist.h \
  zc_hashtable.h zc_xplatform.h zc_util.h format.h thread.h event.h buf.h \
  mdc.h rotater.h category_table.h category.h record_table.h \
