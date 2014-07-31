@@ -94,6 +94,112 @@ void zlog_conf_del(zlog_conf_t * a_conf)
 static int zlog_conf_build_without_file(zlog_conf_t * a_conf);
 static int zlog_conf_build_with_file(zlog_conf_t * a_conf);
 
+zlog_conf_t *zlog_conf_new_from_string(const char *config_string)
+{
+    zlog_conf_t *a_conf = NULL;
+
+    a_conf = calloc(1, sizeof(zlog_conf_t));
+    if (!a_conf) {
+        zc_error("calloc fail, errno[%d]", errno);
+        return NULL;
+    }
+
+    // no configuration file
+    memset(a_conf->file, 0x00, sizeof(a_conf->file));
+
+    a_conf->levels = zlog_level_list_new();
+    if (!a_conf->levels) {
+        zc_error("zlog_level_list_new fail");
+        goto err;
+    }
+
+    a_conf->formats = zc_arraylist_new((zc_arraylist_del_fn) zlog_format_del);
+    if (!a_conf->formats) {
+        zc_error("zc_arraylist_new fail");
+        goto err;
+    }
+
+    a_conf->rules = zc_arraylist_new((zc_arraylist_del_fn) zlog_rule_del);
+    if (!a_conf->rules) {
+        zc_error("init rule_list fail");
+        goto err;
+    }
+
+    zlog_rule_t *rule;
+
+    //TODO: use actually the string froM the params instead of building the conf
+    strcpy(a_conf->rotate_lock_file, "zlog-rotate.lock");
+    a_conf->strict_init = 1;
+    a_conf->buf_size_min = ZLOG_CONF_DEFAULT_BUF_SIZE_MIN;
+    a_conf->buf_size_max = ZLOG_CONF_DEFAULT_BUF_SIZE_MAX;
+    strcpy(a_conf->default_format_line, ZLOG_CONF_DEFAULT_FORMAT);
+    a_conf->file_perms = ZLOG_CONF_DEFAULT_FILE_PERMS;
+    a_conf->reload_conf_period = ZLOG_CONF_DEFAULT_RELOAD_CONF_PERIOD;
+    a_conf->fsync_period = ZLOG_CONF_DEFAULT_FSYNC_PERIOD;
+
+    a_conf->default_format = zlog_format_new(a_conf->default_format_line,
+            &(a_conf->time_cache_count));
+    if (!a_conf->default_format) {
+        zc_error("zlog_format_new fail");
+        goto err;
+    }
+
+    a_conf->rotater = zlog_rotater_new(a_conf->rotate_lock_file);
+    if (!a_conf->rotater) {
+        zc_error("zlog_rotater_new fail");
+        goto err;
+    }
+
+    rule = zlog_rule_new(
+            ZLOG_CONF_DEFAULT_RULE,
+            a_conf->levels,
+            a_conf->default_format,
+            a_conf->formats,
+            a_conf->file_perms,
+            a_conf->fsync_period,
+            &(a_conf->time_cache_count));
+    if (!rule) {
+        zc_error("zlog_rule_new fail");
+        goto err;
+    }
+
+    /* add rule */
+    if (zc_arraylist_add(a_conf->rules, rule)) {
+        zlog_rule_del(rule);
+        printf("zc_arraylist_add fail");
+        goto err;
+    }
+
+    // for now allow 10 logs, each of 10MB
+    rule = zlog_rule_new(
+            "*.* \"airtame.log\", 10MB * 10",
+            a_conf->levels,
+            a_conf->default_format,
+            a_conf->formats,
+            a_conf->file_perms,
+            a_conf->fsync_period,
+            &(a_conf->time_cache_count));
+    if (!rule) {
+        printf("zlog_rule_new fail");
+        goto err;
+    }
+    printf("Rule Added !!!!!!");
+
+    /* add rule */
+    if (zc_arraylist_add(a_conf->rules, rule)) {
+        zlog_rule_del(rule);
+        zc_error("zc_arraylist_add fail");
+        goto err;
+    }
+
+
+    zlog_conf_profile(a_conf, ZC_DEBUG);
+    return a_conf;
+err:
+    zlog_conf_del(a_conf);
+    return NULL;
+}
+
 zlog_conf_t *zlog_conf_new(const char *confpath)
 {
 	int nwrite = 0;

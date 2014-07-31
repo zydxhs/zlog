@@ -64,6 +64,54 @@ static void zlog_clean_rest_thread(void)
 	return;
 }
 
+static int zlog_init_inner_from_string(const char *config_string)
+{
+    int rc = 0;
+
+    /* the 1st time in the whole process do init */
+    if (zlog_env_init_version == 0) {
+        /* clean up is done by OS when a thread call pthread_exit */
+        rc = pthread_key_create(&zlog_thread_key, (void (*) (void *)) zlog_thread_del);
+        if (rc) {
+            zc_error("pthread_key_create fail, rc[%d]", rc);
+            goto err;
+        }
+
+        /* if some thread do not call pthread_exit, like main thread
+         * atexit will clean it
+         */
+        rc = atexit(zlog_clean_rest_thread);
+        if (rc) {
+            zc_error("atexit fail, rc[%d]", rc);
+            goto err;
+        }
+        zlog_env_init_version++;
+    } /* else maybe after zlog_fini() and need not create pthread_key */
+
+    zlog_env_conf = zlog_conf_new_from_string(config_string);
+    if (!zlog_env_conf) {
+        zc_error("zlog_conf_new[%s] fail", config_string);
+        goto err;
+    }
+
+    zlog_env_categories = zlog_category_table_new();
+    if (!zlog_env_categories) {
+        zc_error("zlog_category_table_new fail");
+        goto err;
+    }
+
+    zlog_env_records = zlog_record_table_new();
+    if (!zlog_env_records) {
+        zc_error("zlog_record_table_new fail");
+        goto err;
+    }
+
+    return 0;
+err:
+    zlog_fini_inner();
+    return -1;
+}
+
 static int zlog_init_inner(const char *confpath)
 {
 	int rc = 0;
@@ -110,6 +158,49 @@ static int zlog_init_inner(const char *confpath)
 err:
 	zlog_fini_inner();
 	return -1;
+}
+
+int zlog_init_from_string(const char *config_string)
+{
+    int rc;
+    zc_debug("------zlog_init start------");
+    zc_debug("------compile time[%s %s], version[%s]------", __DATE__, __TIME__, ZLOG_VERSION);
+
+    rc = pthread_rwlock_wrlock(&zlog_env_lock);
+    if (rc) {
+        zc_error("pthread_rwlock_wrlock fail, rc[%d]", rc);
+        return -1;
+    }
+
+    if (zlog_env_is_init) {
+        zc_error("already init, use zlog_reload pls");
+        goto err;
+    }
+
+
+    if (zlog_init_inner_from_string(config_string)) {
+        zc_error("zlog_init_inner[%s] fail", config_string);
+        goto err;
+    }
+
+    zlog_env_is_init = 1;
+    zlog_env_init_version++;
+
+    zc_debug("------zlog_init success end------");
+    rc = pthread_rwlock_unlock(&zlog_env_lock);
+    if (rc) {
+        zc_error("pthread_rwlock_unlock fail, rc=[%d]", rc);
+        return -1;
+    }
+    return 0;
+    err:
+    zc_error("------zlog_init fail end------");
+    rc = pthread_rwlock_unlock(&zlog_env_lock);
+    if (rc) {
+        zc_error("pthread_rwlock_unlock fail, rc=[%d]", rc);
+        return -1;
+    }
+    return -1;
 }
 
 /*******************************************************************************/
