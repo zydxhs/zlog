@@ -93,6 +93,8 @@ void zlog_conf_del(zlog_conf_t * a_conf)
 
 static int zlog_conf_build_without_file(zlog_conf_t * a_conf);
 static int zlog_conf_build_with_file(zlog_conf_t * a_conf);
+static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
+        const char *conf_string);
 
 zlog_conf_t *zlog_conf_new_from_string(const char *config_string)
 {
@@ -170,28 +172,7 @@ zlog_conf_t *zlog_conf_new_from_string(const char *config_string)
         goto err;
     }
 
-    // for now allow 10 logs, each of 10MB
-    rule = zlog_rule_new(
-            "*.* \"airtame.log\", 10MB * 10",
-            a_conf->levels,
-            a_conf->default_format,
-            a_conf->formats,
-            a_conf->file_perms,
-            a_conf->fsync_period,
-            &(a_conf->time_cache_count));
-    if (!rule) {
-        printf("zlog_rule_new fail");
-        goto err;
-    }
-    printf("Rule Added !!!!!!");
-
-    /* add rule */
-    if (zc_arraylist_add(a_conf->rules, rule)) {
-        zlog_rule_del(rule);
-        zc_error("zc_arraylist_add fail");
-        goto err;
-    }
-
+    zlog_conf_build_with_string(a_conf, config_string);
 
     zlog_conf_profile(a_conf, ZC_DEBUG);
     return a_conf;
@@ -320,6 +301,108 @@ static int zlog_conf_build_without_file(zlog_conf_t * a_conf)
 }
 /*******************************************************************************/
 static int zlog_conf_parse_line(zlog_conf_t * a_conf, char *line, int *section);
+
+static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
+        const char *conf_string)
+{
+    int rc = 0;
+    char line[MAXLEN_CFG_LINE + 1];
+    size_t line_len;
+    char *pline = NULL;
+    char *p = NULL;
+    int line_no = 0;
+    int i = 0;
+    int in_quotation = 0;
+    char *conf_string_l = (char *)conf_string;
+
+    int section = 0;
+    /* [global:1] [levels:2] [formats:3] [rules:4] */
+
+    if (a_conf == NULL) {
+        return -1;
+    }
+
+    /* Now process the file.
+     */
+    pline = line;
+    memset(&line, 0x00, sizeof(line));
+    while ((pline = strsep(&conf_string_l, "\n")) != NULL) {
+        ++line_no;
+        line_len = strlen(pline);
+        if (pline[line_len - 1] == '\n') {
+            pline[line_len - 1] = '\0';
+        }
+
+        /* check for end-of-section, comments, strip off trailing
+         * spaces and newline character.
+         */
+        p = pline;
+        while (*p && isspace((int)*p))
+            ++p;
+        if (*p == '\0' || *p == '#')
+            continue;
+
+        for (i = 0; p[i] != '\0'; ++i) {
+            pline[i] = p[i];
+        }
+        pline[i] = '\0';
+
+        for (p = pline + strlen(pline) - 1; isspace((int)*p); --p)
+            /*EMPTY*/;
+
+        if (*p == '\\') {
+            if ((p - line) > MAXLEN_CFG_LINE - 30) {
+                /* Oops the buffer is full - what now? */
+                pline = line;
+            } else {
+                for (p--; isspace((int)*p); --p)
+                    /*EMPTY*/;
+                p++;
+                *p = 0;
+                pline = p;
+                continue;
+            }
+        } else {
+            strcpy(line, pline);
+        }
+
+        *++p = '\0';
+
+        /* clean the tail comments start from # and not in quotation */
+        in_quotation = 0;
+        for (p = line; *p != '\0'; p++) {
+            if (*p == '"') {
+                in_quotation ^= 1;
+                continue;
+            }
+
+            if (*p == '#' && !in_quotation) {
+                *p = '\0';
+                break;
+            }
+        }
+
+        /* we now have the complete line,
+         * and are positioned at the first non-whitespace
+         * character. So let's process it
+         */
+        rc = zlog_conf_parse_line(a_conf, line, &section);
+        if (rc < 0) {
+            zc_error("parse configure file[%s]line_no[%ld] fail", a_conf->file, line_no);
+            zc_error("line[%s]", line);
+            goto exit;
+        } else if (rc > 0) {
+            zc_warn("parse configure file[%s]line_no[%ld] fail", a_conf->file, line_no);
+            zc_warn("line[%s]", line);
+            zc_warn("as strict init is set to false, ignore and go on");
+            rc = 0;
+            continue;
+        }
+    }
+
+exit:
+    return rc;
+}
 
 static int zlog_conf_build_with_file(zlog_conf_t * a_conf)
 {
