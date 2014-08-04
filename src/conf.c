@@ -149,7 +149,10 @@ zlog_conf_t *zlog_conf_new_from_string(const char *config_string)
         goto err;
     }
 
-    zlog_conf_build_with_string(a_conf, config_string);
+    if (zlog_conf_build_with_string(a_conf, config_string)) {
+        zc_error("zlog_conf_build_with_string fail");
+        goto err;
+    }
 
     zlog_conf_profile(a_conf, ZC_DEBUG);
     return a_conf;
