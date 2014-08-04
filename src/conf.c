@@ -127,9 +127,6 @@ zlog_conf_t *zlog_conf_new_from_string(const char *config_string)
         goto err;
     }
 
-    zlog_rule_t *rule;
-
-    //TODO: use actually the string froM the params instead of building the conf
     strcpy(a_conf->rotate_lock_file, "zlog-rotate.lock");
     a_conf->strict_init = 1;
     a_conf->buf_size_min = ZLOG_CONF_DEFAULT_BUF_SIZE_MIN;
@@ -149,26 +146,6 @@ zlog_conf_t *zlog_conf_new_from_string(const char *config_string)
     a_conf->rotater = zlog_rotater_new(a_conf->rotate_lock_file);
     if (!a_conf->rotater) {
         zc_error("zlog_rotater_new fail");
-        goto err;
-    }
-
-    rule = zlog_rule_new(
-            ZLOG_CONF_DEFAULT_RULE,
-            a_conf->levels,
-            a_conf->default_format,
-            a_conf->formats,
-            a_conf->file_perms,
-            a_conf->fsync_period,
-            &(a_conf->time_cache_count));
-    if (!rule) {
-        zc_error("zlog_rule_new fail");
-        goto err;
-    }
-
-    /* add rule */
-    if (zc_arraylist_add(a_conf->rules, rule)) {
-        zlog_rule_del(rule);
-        printf("zc_arraylist_add fail");
         goto err;
     }
 
