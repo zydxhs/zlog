@@ -293,7 +293,9 @@ static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
     int line_no = 0;
     int i = 0;
     int in_quotation = 0;
-    char *conf_string_l = (char *)conf_string;
+    char *conf_string_l = (char *)malloc(strlen(conf_string));
+    // strsep changes the original string..so make a copy here
+    memcpy(conf_string_l, conf_string, strlen(conf_string));
 
     int section = 0;
     /* [global:1] [levels:2] [formats:3] [rules:4] */
@@ -381,6 +383,7 @@ static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
     }
 
 exit:
+    free(conf_string_l);
     return rc;
 }
 
