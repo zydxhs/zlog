@@ -14,7 +14,13 @@
 #include <errno.h>
 
 #include <pthread.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include "zlog_win.h"
+#endif
+
 #include <sys/time.h>
 
 #include "zc_defs.h"
@@ -23,6 +29,7 @@
 void zlog_event_profile(zlog_event_t * a_event, int flag)
 {
 	zc_assert(a_event,);
+#ifndef _WIN32
 	zc_profile(flag, "---event[%p][%s,%s][%s(%ld),%s(%ld),%ld,%d][%p,%s][%ld,%ld][%ld,%ld][%d]---",
 			a_event,
 			a_event->category_name, a_event->host_name,
@@ -33,6 +40,19 @@ void zlog_event_profile(zlog_event_t * a_event, int flag)
 			a_event->time_stamp.tv_sec, a_event->time_stamp.tv_usec,
 			(long)a_event->pid, (long)a_event->tid,
 			a_event->time_cache_count);
+#else
+    zc_profile(flag, "---event[%p][%s,%s][%s(%ld),%s(%ld),%ld,%d][%p,%s][%ld,%ld][%ld,%ld][%d]---",
+            a_event,
+            a_event->category_name, a_event->host_name,
+            a_event->file, a_event->file_len,
+            a_event->func, a_event->func_len,
+            a_event->line, a_event->level,
+            a_event->hex_buf, a_event->str_format,
+            a_event->time_stamp.tv_sec, a_event->time_stamp.tv_usec,
+            (long)0,
+            (long)0,
+            a_event->time_cache_count);
+#endif
 	return;
 }
 
@@ -68,11 +88,17 @@ zlog_event_t *zlog_event_new(int time_cache_count)
 	 * at the zlog_init we gethostname,
 	 * u don't always change your hostname, eh?
 	 */
+#ifndef _WIN32
 	if (gethostname(a_event->host_name, sizeof(a_event->host_name) - 1)) {
 		zc_error("gethostname fail, errno[%d]", errno);
 		goto err;
 	}
-
+#else
+	if (gethostname_w(a_event->host_name, sizeof(a_event->host_name) - 1)) {
+		zc_error("gethostname fail, errno[%d]", errno);
+		goto err;
+	}
+#endif
 	a_event->host_name_len = strlen(a_event->host_name);
 
 	/* tid is bound to a_event
@@ -81,8 +107,13 @@ zlog_event_t *zlog_event_new(int time_cache_count)
 	 */
 	a_event->tid = pthread_self();
 
+#ifndef _WIN32
 	a_event->tid_str_len = sprintf(a_event->tid_str, "%lu", (unsigned long)a_event->tid);
 	a_event->tid_hex_str_len = sprintf(a_event->tid_hex_str, "0x%x", (unsigned int)a_event->tid);
+#else
+	a_event->tid_str_len = sprintf(a_event->tid_str, "%lu", 0);
+	a_event->tid_hex_str_len = sprintf(a_event->tid_hex_str, "0x%x", 0);
+#endif
 
 	//zlog_event_profile(a_event, ZC_DEBUG);
 	return a_event;

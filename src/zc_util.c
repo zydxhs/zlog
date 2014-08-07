@@ -7,7 +7,13 @@
  */
 
 #include <string.h>
+
+#ifndef _WIN32
 #include <syslog.h>
+#else
+#include "zlog_win.h"
+#endif
+
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>

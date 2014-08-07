@@ -14,9 +14,12 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #include "zc_defs.h"
 #include "rotater.h"
@@ -102,8 +105,14 @@ zlog_rotater_t *zlog_rotater_new(char *lock_file)
 	 * user B is unable to read /tmp/zlog.lock
 	 * B has to choose another lock file except /tmp/zlog.lock
 	 */
-	fd = open(lock_file, O_RDWR | O_CREAT,
+#ifndef _WIN32
+	 fd = open(lock_file, O_RDWR | O_CREAT,
 		  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+#else
+	FILE *f = fopen(lock_file, "wb");
+	fd = 0;
+	if (f) fd = fileno(f);
+#endif
 	if (fd < 0) {
 		zc_error("open file[%s] fail, errno[%d]", lock_file, errno);
 		goto err;
@@ -468,6 +477,8 @@ err:
 
 static int zlog_rotater_trylock(zlog_rotater_t *a_rotater)
 {
+#ifndef _WIN32
+
 	int rc;
 	struct flock fl;
 
@@ -500,12 +511,14 @@ static int zlog_rotater_trylock(zlog_rotater_t *a_rotater)
 		return -1;
 	}
 
+#endif
 	return 0;
 }
 
 static int zlog_rotater_unlock(zlog_rotater_t *a_rotater)
 {
 	int rc = 0;
+#ifndef _WIN32
 	struct flock fl;
 
 	fl.l_type = F_UNLCK;
@@ -522,6 +535,7 @@ static int zlog_rotater_unlock(zlog_rotater_t *a_rotater)
 		rc = -1;
 		zc_error("pthread_mutext_unlock fail, errno[%d]", errno);
 	}
+#endif
 
 	return rc;
 }
