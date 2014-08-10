@@ -10,13 +10,17 @@
 
 #include <string.h>
 #include <ctype.h>
+#ifndef _WIN32
 #include <syslog.h>
+#include <unistd.h>
+#else
+#include "zlog_win.h"
+#endif
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <pthread.h>
 
 #include "rule.h"
@@ -76,7 +80,10 @@ void zlog_rule_profile(zlog_rule_t * a_rule, int flag)
 
 static int zlog_rule_output_static_file_single(zlog_rule_t * a_rule, zlog_thread_t * a_thread)
 {
+#ifndef _WIN32
 	struct stat stb;
+#endif
+
 	int do_file_reload = 0;
 	int redo_inode_stat = 0;
 
@@ -85,6 +92,7 @@ static int zlog_rule_output_static_file_single(zlog_rule_t * a_rule, zlog_thread
 		return -1;
 	}
 
+#ifndef _WIN32
 	/* check if the output file was changed by an external tool by comparing the inode to our saved off one */
 	if (stat(a_rule->file_path, &stb)) {
 		if (errno != ENOENT) {
@@ -97,6 +105,7 @@ static int zlog_rule_output_static_file_single(zlog_rule_t * a_rule, zlog_thread
 	} else {
 		do_file_reload = (stb.st_ino != a_rule->static_ino || stb.st_dev != a_rule->static_dev);
 	}
+#endif
 
 	if (do_file_reload) {
 		close(a_rule->static_fd);
@@ -108,6 +117,7 @@ static int zlog_rule_output_static_file_single(zlog_rule_t * a_rule, zlog_thread
 			return -1;
 		}
 
+#ifndef _WIN32
 		/* save off the new dev/inode info from the stat call we already did */
 		if (redo_inode_stat) {
 			if (stat(a_rule->file_path, &stb)) {
@@ -117,6 +127,8 @@ static int zlog_rule_output_static_file_single(zlog_rule_t * a_rule, zlog_thread
 		}
 		a_rule->static_dev = stb.st_dev;
 		a_rule->static_ino = stb.st_ino;
+#endif
+
 	}
 
 	if (write(a_rule->static_fd,
@@ -205,10 +217,12 @@ static int zlog_rule_output_static_file_rotate(zlog_rule_t * a_rule, zlog_thread
 		return 0;
 	}
 
+#ifndef _WIN32
 	if (stat(a_rule->file_path, &info)) {
 		zc_warn("stat [%s] fail, errno[%d], maybe in rotating", a_rule->file_path, errno);
 		return 0;
 	}
+#endif
 
 	/* file not so big, return */
 	if (info.st_size + len < a_rule->archive_max_size) return 0;
@@ -379,8 +393,12 @@ static int zlog_rule_output_syslog(zlog_rule_t * a_rule, zlog_thread_t * a_threa
 
 	a_level = zlog_level_list_get(zlog_env_conf->levels, a_thread->event->level);
 	zlog_buf_seal(a_thread->msg_buf);
+
+#ifndef _WIN32
 	syslog(a_rule->syslog_facility | a_level->syslog_level,
 		"%s",  zlog_buf_str(a_thread->msg_buf));
+#endif
+
 	return 0;
 }
 
@@ -765,7 +783,9 @@ zlog_rule_t *zlog_rule_new(char *line,
 		a_rule->fsync_period = 0;
 
 		p = file_path + 1;
+#ifndef _WIN32
 		a_rule->file_open_flags = O_SYNC;
+#endif
 		/* fall through */
 	case '"' :
 		if (!p) p = file_path;
@@ -813,7 +833,10 @@ zlog_rule_t *zlog_rule_new(char *line,
 				a_rule->output = zlog_rule_output_dynamic_file_rotate;
 			}
 		} else {
+
+#ifndef _WIN32
 			struct stat stb;
+#endif
 
 			if (a_rule->archive_max_size <= 0) {
 				a_rule->output = zlog_rule_output_static_file_single;
@@ -823,13 +846,13 @@ zlog_rule_t *zlog_rule_new(char *line,
 			}
 
 			a_rule->static_fd = open(a_rule->file_path,
-				O_WRONLY | O_APPEND | O_CREAT | a_rule->file_open_flags,
-				a_rule->file_perms);
+				O_WRONLY | O_APPEND | O_CREAT | a_rule->file_open_flags);
 			if (a_rule->static_fd < 0) {
 				zc_error("open file[%s] fail, errno[%d]", a_rule->file_path, errno);
 				goto err;
 			}
 
+#ifndef _WIN32
 			/* save off the inode information for checking for a changed file later on */
 			if (fstat(a_rule->static_fd, &stb)) {
 				zc_error("stat [%s] fail, errno[%d], failing to open static_fd", a_rule->file_path, errno);
@@ -837,9 +860,12 @@ zlog_rule_t *zlog_rule_new(char *line,
 			}
 			a_rule->static_dev = stb.st_dev;
 			a_rule->static_ino = stb.st_ino;
+#endif
+
 		}
 		break;
-	case '|' :
+#ifndef _WIN32
+case '|' :
 		a_rule->pipe_fp = popen(output + 1, "w");
 		if (!a_rule->pipe_fp) {
 			zc_error("popen fail, errno[%d]", errno);
@@ -852,8 +878,10 @@ zlog_rule_t *zlog_rule_new(char *line,
 		}
 		a_rule->output = zlog_rule_output_pipe;
 		break;
+#endif
 	case '>' :
 		if (STRNCMP(file_path + 1, ==, "syslog", 6)) {
+#ifndef _WIN32
 			a_rule->syslog_facility = syslog_facility_atoi(file_limit);
 			if (a_rule->syslog_facility == -187) {
 				zc_error("-187 get");
@@ -861,6 +889,7 @@ zlog_rule_t *zlog_rule_new(char *line,
 			}
 			a_rule->output = zlog_rule_output_syslog;
 			openlog(NULL, LOG_NDELAY | LOG_NOWAIT | LOG_PID, LOG_USER);
+#endif
 		} else if (STRNCMP(file_path + 1, ==, "stdout", 6)) {
 			a_rule->output = zlog_rule_output_stdout;
 		} else if (STRNCMP(file_path + 1, ==, "stderr", 6)) {
@@ -956,11 +985,13 @@ void zlog_rule_del(zlog_rule_t * a_rule)
 			zc_error("close fail, maybe cause by write, errno[%d]", errno);
 		}
 	}
+#ifndef _WIN32
 	if (a_rule->pipe_fp) {
 		if (pclose(a_rule->pipe_fp) == -1) {
 			zc_error("pclose fail, errno[%d]", errno);
 		}
 	}
+#endif
 	if (a_rule->archive_specs) {
 		zc_arraylist_del(a_rule->archive_specs);
 		a_rule->archive_specs = NULL;

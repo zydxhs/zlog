@@ -14,7 +14,13 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include "zlog_win.h"
+#endif
+
 #include <time.h>
 
 #include "conf.h"
@@ -282,6 +288,34 @@ static int zlog_conf_build_without_file(zlog_conf_t * a_conf)
 /*******************************************************************************/
 static int zlog_conf_parse_line(zlog_conf_t * a_conf, char *line, int *section);
 
+char *sgets(char *s, int size, char **string)
+{
+    if (*string == NULL) return NULL;
+
+    char* nlp = strchr(*string, '\n');
+    char *fstring = *string;
+    if (nlp == NULL) {
+        if (strlen(fstring) > 0) {
+            nlp = fstring + strlen(fstring);
+        } else {
+            return NULL;
+        }
+    }
+
+    int ss =  (int)(nlp + 1 -  fstring);
+    if (size > ss)
+        size = ss;
+
+    memcpy(s, *string, size);
+    s[size] = 0;
+    if (strlen(*string) == strlen(s)) {
+        *string = NULL;
+    } else {
+        *string += size;
+    }
+    return s;
+}
+
 static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
         const char *conf_string)
 {
@@ -293,7 +327,7 @@ static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
     int line_no = 0;
     int i = 0;
     int in_quotation = 0;
-    char *conf_string_l = (char *)conf_string;
+    char *conf_string_l = (char*) conf_string;
 
     int section = 0;
     /* [global:1] [levels:2] [formats:3] [rules:4] */
@@ -306,7 +340,7 @@ static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
      */
     pline = line;
     memset(&line, 0x00, sizeof(line));
-    while ((pline = strsep(&conf_string_l, "\n")) != NULL) {
+    while (sgets(pline, MAXLEN_CFG_LINE, &conf_string_l) != NULL) {
         ++line_no;
         line_len = strlen(pline);
         if (pline[line_len - 1] == '\n') {
@@ -402,11 +436,14 @@ static int zlog_conf_build_with_file(zlog_conf_t * a_conf)
 	int section = 0;
 	/* [global:1] [levels:2] [formats:3] [rules:4] */
 
+#ifndef _WIN32
 	if (lstat(a_conf->file, &a_stat)) {
 		zc_error("lstat conf file[%s] fail, errno[%d]", a_conf->file,
 			 errno);
 		return -1;
 	}
+#endif
+
 	localtime_r(&(a_stat.st_mtime), &local_time);
 	strftime(a_conf->mtime, sizeof(a_conf->mtime), "%F %T", &local_time);
 
