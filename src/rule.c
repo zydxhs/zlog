@@ -846,7 +846,8 @@ zlog_rule_t *zlog_rule_new(char *line,
 			}
 
 			a_rule->static_fd = open(a_rule->file_path,
-				O_WRONLY | O_APPEND | O_CREAT | a_rule->file_open_flags);
+				O_WRONLY | O_APPEND | O_CREAT | a_rule->file_open_flags,
+				a_rule->file_perms);
 			if (a_rule->static_fd < 0) {
 				zc_error("open file[%s] fail, errno[%d]", a_rule->file_path, errno);
 				goto err;
