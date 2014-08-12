@@ -377,7 +377,7 @@ static int zlog_conf_build_with_string(zlog_conf_t *a_conf,
                 continue;
             }
         } else {
-            strcpy(line, pline);
+            memmove(line, pline, strlen(pline)+1);
         }
 
         *++p = '\0';
