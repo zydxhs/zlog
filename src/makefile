@@ -93,6 +93,9 @@ endif
 
 ifeq ($(UNAME), MINGW)
    $(print compiling on mingw !!)
+   DYLIBSUFFIX=dll
+   STLIBSUFFIX=nogo
+
    REAL_LDFLAGS := $(REAL_LDFLAGS) -lws2_32
 endif
 
