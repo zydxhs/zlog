@@ -11,8 +11,13 @@
 int gethostname_w(char *name, size_t len)
 {
 	int rc = gethostname(name, len);
+	DWORD newlen = len;
+
 	if (rc != 0) {
-		sprintf(name, "noname");
+		rc = GetComputerNameEx(ComputerNameDnsHostname, name, &newlen);
+		if (rc == 0) {
+			sprintf(name, "noname");
+		}
 	}
 	return 0;
 }
