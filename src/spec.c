@@ -65,7 +65,17 @@ static int zlog_spec_write_time(zlog_spec_t * a_spec, zlog_thread_t * a_thread, 
 
 	/* When this spec's last cache time string is not now */
 	if (a_cache->sec != now_sec) {
+
+	// FIXME: This is a very ugly hack here to write unix timestamps directly without respecting the format
+#ifdef _WIN32
+		if (strcmp(a_spec->time_fmt, "%s") == 0) {
+			a_cache->len = sprintf(a_cache->str, "%d", now_sec);
+		} else {
+			a_cache->len = strftime(a_cache->str, sizeof(a_cache->str), a_spec->time_fmt, time_local);
+		}
+#else
 		a_cache->len = strftime(a_cache->str, sizeof(a_cache->str), a_spec->time_fmt, time_local);
+#endif
 		a_cache->sec = now_sec;
 	}
 
