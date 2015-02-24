@@ -66,6 +66,12 @@ STLIB_MAKE_CMD=ar rcs $(STLIBNAME)
 PREFIX?=/usr/local
 INCLUDE_PATH?=include
 LIBRARY_PATH?=lib
+
+UNAME_SHORT := $(shell sh -c 'uname -s 2>/dev/null | cut -c -5')
+ifeq ($(uname_S),Mingw)
+LIBRARY_PATH := bin
+endif
+
 INSTALL_INCLUDE_PATH= $(PREFIX)/$(INCLUDE_PATH)
 INSTALL_LIBRARY_PATH= $(PREFIX)/$(LIBRARY_PATH)
 
