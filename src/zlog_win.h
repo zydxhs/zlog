@@ -3,9 +3,12 @@
 
 #include <time.h>
 
-
+#ifndef localtime_r
 struct tm *localtime_r(const time_t *timep, struct tm *result);
+#endif
+#ifndef strcasecmp
 int strcasecmp (const char *sz1, const char *sz2);
+#endif
 int fsync (int fd);
 void setenv(const char *name, const char *value);
 int gethostname_w(char *name, size_t len);

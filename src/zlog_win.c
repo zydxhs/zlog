@@ -21,12 +21,13 @@ int gethostname_w(char *name, size_t len)
 	}
 	return 0;
 }
-
+#ifndef strcasecmp
 int strcasecmp (const char *sz1, const char *sz2)
 {
   return stricmp (sz1, sz2);
 }
-
+#endif
+#ifndef localtime_r
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
     struct tm *ret = localtime(timep);
@@ -36,7 +37,7 @@ struct tm *localtime_r(const time_t *timep, struct tm *result)
     }
     return ret;
 }
-
+#endif
 int fsync (int fd)
 {
     HANDLE h = (HANDLE) _get_osfhandle (fd);
