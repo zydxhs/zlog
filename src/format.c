@@ -82,8 +82,8 @@ zlog_format_t *zlog_format_new(char *line, int * time_cache_count)
 		goto err;
 	}
 
-	if (*(line + nread) != '"') {
-		zc_error("the 1st char of pattern is not \", line+nread[%s]", line+nread);
+	if (*(line + nread) != '\'') {
+		zc_error("the 1st char of pattern is not a single quote, line+nread[%s]", line+nread);
 		goto err;
 	}
 
@@ -95,9 +95,9 @@ zlog_format_t *zlog_format_new(char *line, int * time_cache_count)
 	}
 
 	p_start = line + nread + 1;
-	p_end = strrchr(p_start, '"');
+	p_end = strrchr(p_start, '\'');
 	if (!p_end) {
-		zc_error("there is no \" at end of pattern, line[%s]", line);
+		zc_error("there is no single quote at end of pattern, line[%s]", line);
 		goto err;
 	}
 
