@@ -25,7 +25,7 @@ SET(zlog_so_ver ${CPACK_PACKAGE_VERSION_MAJOR})
 message(STATUS "plateform : ${CMAKE_SYSTEM}")
 
 add_definitions("-g -Wall -Wstrict-prototypes")
-set(CMAKE_C_FLAGS "-std=c99 -pedantic")
+set(CMAKE_C_FLAGS "-std=c99 -pedantic -D_DEFAULT_SOURCE")
 set(CMAKE_C_FLAGS_DEBUG "-ggdb3 -DDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "-O2")
 
