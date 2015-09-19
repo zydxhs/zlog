@@ -3,6 +3,10 @@
 # generate zlog lib
 #================================================================
 aux_source_directory(. SRCS)
+if (NOT WIN32)
+    list(REMOVE_ITEM SRCS ./zlog_win.c)
+endif()
+
 list(REMOVE_ITEM SRCS ./zlog-chk-conf.c)
 
 add_library(zlog
@@ -26,7 +30,7 @@ add_library(zlog_s
     STATIC
     ${SRCS}
     )
-target_link_libraries(zlog_s 
+target_link_libraries(zlog_s
     ${CMAKE_THREAD_PREFER_PTHREAD}
     )
 
@@ -48,7 +52,7 @@ target_link_libraries(zlog-chk-conf zlog)
 #================================================================
 # install
 #================================================================
-install(TARGETS 
+install(TARGETS
     zlog zlog_s zlog-chk-conf
     COMPONENT zlog
     ARCHIVE DESTINATION lib

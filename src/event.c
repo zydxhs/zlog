@@ -32,7 +32,7 @@ void zlog_event_profile(zlog_event_t * a_event, int flag)
 			a_event->file, a_event->file_len,
 			a_event->func, a_event->func_len,
 			a_event->line, a_event->level,
-			a_event->hex_buf, a_event->str_format,	
+			a_event->hex_buf, a_event->str_format,
 			a_event->time_stamp.tv_sec, a_event->time_stamp.tv_usec,
 			(long)a_event->pid, (long)a_event->tid,
 			a_event->time_cache_count);

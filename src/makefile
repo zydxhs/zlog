@@ -30,11 +30,27 @@ LIBNAME=libzlog
 ZLOG_MAJOR=1
 ZLOG_MINOR=2
 
+
+# for mingw (cut the last part of the uname)
+UNAME := $(shell uname | cut -c -5)
+
+ifeq ($(UNAME), MINGW)
+   $(print compiling on mingw !!)
+  OBJ := $(OBJ) zlog_win.o
+endif
+
 # Fallback to gcc when $CC is not in $PATH.
 CC:=$(shell sh -c 'type $(CC) >/dev/null 2>/dev/null && echo $(CC) || echo gcc')
-OPTIMIZATION?=-O2
+OPTIMIZATION=-O0
+
+ifeq ($(UNAME), MINGW)
+#XXX: ignore warnings on mingw for now
+WARNINGS=-Wall -Wstrict-prototypes -fwrapv
+else
 WARNINGS=-Wall -Werror -Wstrict-prototypes -fwrapv
-DEBUG?= -g -ggdb
+endif
+
+DEBUG= -g -ggdb
 REAL_CFLAGS=$(OPTIMIZATION) -fPIC -pthread $(CFLAGS) $(WARNINGS) $(DEBUG)
 REAL_LDFLAGS=$(LDFLAGS) -pthread
 
@@ -51,6 +67,12 @@ STLIB_MAKE_CMD=ar rcs $(STLIBNAME)
 PREFIX?=/usr/local
 INCLUDE_PATH?=include
 LIBRARY_PATH?=lib
+
+UNAME_SHORT := $(shell sh -c 'uname -s 2>/dev/null | cut -c -5')
+ifeq ($(uname_S),Mingw)
+LIBRARY_PATH := bin
+endif
+
 INSTALL_INCLUDE_PATH= $(PREFIX)/$(INCLUDE_PATH)
 INSTALL_LIBRARY_PATH= $(PREFIX)/$(LIBRARY_PATH)
 
@@ -74,6 +96,15 @@ ifeq ($(uname_S),AIX)
   DYLIB_MAKE_CMD=$(CC) -shared -Wl,-G,-b64 -maix64 -pthread -o $(DYLIBNAME) $(LDFLAGS)
   REAL_CFLAGS+= -maix64
   STLIB_MAKE_CMD=OBJECT_MODE=64 ar rcs $(STLIBNAME) $(DYLIB_MAJOR_NAME)
+endif
+
+ifeq ($(UNAME), MINGW)
+   $(print compiling on mingw !!)
+   DYLIBSUFFIX=dll
+   STLIBSUFFIX=nogo
+
+   REAL_CFLAGS  := $(REAL_CFLAGS) -I$(INSTALL_INCLUDE_PATH)
+   REAL_LDFLAGS := $(REAL_LDFLAGS) -L$(INSTALL_LIBRARY_PATH) -lws2_32 -lunixem
 endif
 
 all: $(DYLIBNAME) $(BINS)
@@ -127,6 +158,7 @@ zlog.o: zlog.c fmacros.h conf.h zc_defs.h zc_profile.h zc_arraylist.h \
  zc_hashtable.h zc_xplatform.h zc_util.h format.h thread.h event.h buf.h \
  mdc.h rotater.h category_table.h category.h record_table.h \
  record.h rule.h
+zlog_win.o: zlog_win.c
 
 $(DYLIBNAME): $(OBJ)
 	$(DYLIB_MAKE_CMD) $(OBJ) $(REAL_LDFLAGS)

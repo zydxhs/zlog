@@ -9,9 +9,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
-
 #ifndef _WIN32
 #include <syslog.h>
+#else
+#include "zlog_win.h"
 #endif
 
 #include "zc_defs.h"
@@ -39,7 +40,6 @@ void zlog_level_del(zlog_level_t *a_level)
 	return;
 }
 
-#ifndef _WIN32
 static int syslog_level_atoi(char *str)
 {
 	/* guess no unix system will choose -187
@@ -67,7 +67,6 @@ static int syslog_level_atoi(char *str)
 	zc_error("wrong syslog level[%s]", str);
 	return -187;
 }
-#endif // _WIN32
 
 /* line: TRACE = 10, LOG_ERR */
 zlog_level_t *zlog_level_new(char *line)
@@ -109,7 +108,6 @@ zlog_level_t *zlog_level_new(char *line)
 
 	a_level->int_level = l;
 
-#ifndef _WIN32
 	/* fill syslog level */
 	if (sl[0] == '\0') {
 		a_level->syslog_level = LOG_DEBUG;
@@ -120,7 +118,6 @@ zlog_level_t *zlog_level_new(char *line)
 			goto err;
 		}
 	}
-#endif
 
 	/* strncpy and toupper(str)  */
 	for (i = 0; (i < sizeof(a_level->str_uppercase) - 1) && str[i] != '\0'; i++) {

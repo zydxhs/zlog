@@ -45,7 +45,8 @@
 #define zlog_fstat fstat64
 #define zlog_stat stat64
 #elif defined(_WIN32)
-#define zlog_stat stat
+#define zlog_fstat _fstat
+#define zlog_stat _stat
 #else
 #define zlog_fstat fstat
 #define zlog_stat stat

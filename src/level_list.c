@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#ifdef _WIN32
+#include "zlog_win.h"
+#endif
 
 #include "zc_defs.h"
 #include "level.h"
