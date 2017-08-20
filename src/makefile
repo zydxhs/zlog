@@ -67,6 +67,7 @@ STLIB_MAKE_CMD=ar rcs $(STLIBNAME)
 PREFIX?=/usr/local
 INCLUDE_PATH?=include
 LIBRARY_PATH?=lib
+BINARY_PATH?=bin
 
 UNAME_SHORT := $(shell sh -c 'uname -s 2>/dev/null | cut -c -5')
 ifeq ($(uname_S),Mingw)
@@ -75,6 +76,7 @@ endif
 
 INSTALL_INCLUDE_PATH= $(PREFIX)/$(INCLUDE_PATH)
 INSTALL_LIBRARY_PATH= $(PREFIX)/$(LIBRARY_PATH)
+INSTALL_BINARY_PATH = $(PREFIX)/$(BINARY_PATH)
 
 # Platform-specific overrides
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
@@ -200,8 +202,9 @@ endif
 INSTALL?= cp -a
 
 install: $(DYLIBNAME) $(STLIBNAME)
-	mkdir -p $(INSTALL_INCLUDE_PATH) $(INSTALL_LIBRARY_PATH)
+	mkdir -p $(INSTALL_INCLUDE_PATH) $(INSTALL_LIBRARY_PATH) $(INSTALL_BINARY_PATH)
 	$(INSTALL) zlog.h $(INSTALL_INCLUDE_PATH)
+	$(INSTALL) zlog-chk-conf $(INSTALL_BINARY_PATH)
 	$(INSTALL) $(DYLIBNAME) $(INSTALL_LIBRARY_PATH)/$(DYLIB_MINOR_NAME)
 	cd $(INSTALL_LIBRARY_PATH) && ln -sf $(DYLIB_MINOR_NAME) $(DYLIB_MAJOR_NAME)
 	cd $(INSTALL_LIBRARY_PATH) && ln -sf $(DYLIB_MAJOR_NAME) $(DYLIBNAME)

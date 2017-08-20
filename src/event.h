@@ -10,7 +10,7 @@
 #define __zlog_event_h
 
 #include <sys/types.h>  /* for pid_t */
-#include <sys/time.h>   /* for struct timeval */
+#include <time.h>   /* for struct timeval */
 #include <pthread.h>    /* for pthread_t */
 #include <stdarg.h>     /* for va_list */
 #include "zc_defs.h"
@@ -48,7 +48,7 @@ typedef struct {
 	struct timeval time_stamp;
 
 	time_t time_local_sec;
-	struct tm time_local;	
+	struct tm time_local;
 
 	zlog_time_cache_t *time_caches;
 	int time_cache_count;
