@@ -94,7 +94,7 @@ typedef enum {
 } zlog_level; 
 
 #if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
-# if defined __GNUC__ && __GNUC__ >= 2
+# if (defined __GNUC__ && __GNUC__ >= 2) || (defined _MSC_VER && _MSC_VER >= 1600)
 #  define __func__ __FUNCTION__
 # else
 #  define __func__ "<unknown>"
